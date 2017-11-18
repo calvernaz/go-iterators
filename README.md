@@ -14,7 +14,7 @@ Why iterators are useful?
 Creating an iterator is as simple as defining a function, the function will have to compute the next item in the iteration.
 
 ```go
-iter := NewDefaultIterator(func() (next interface{}, endOfData bool, e error) { 
+iter := NewDefaultIterator(func() (next interface{}, eod bool, err error) { 
     // Here put the logic that is computing the next element.
     // If there is a next element return: next, false, nil
     // If an error occurs computin the next element return: nil, true, error
@@ -23,3 +23,10 @@ iter := NewDefaultIterator(func() (next interface{}, endOfData bool, e error) {
 
 
 defer iter.Close()
+```
+
+
+## Credits
+
+* [Silvano Riz](https://github.com/melozzola)
+* [Gheorghe Prelipcean](https://gitlab.com/prelipceang)
