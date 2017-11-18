@@ -401,7 +401,7 @@ type MyItemArray []MyItem
 // Adds the iterator behavior to a slice
 
 
-func (a MyItemArray) Iterator() CloseableIterator {
+func (a MyItemArray) Iterator() Iterator {
 	return NewCloseableIterator(next(a), func() error {
 		return nil
 	})
