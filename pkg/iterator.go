@@ -18,11 +18,6 @@ type Iterator interface {
 	HasNext() (bool, error)
 	Next() (interface{}, error)
 	Peek() (item interface{}, e error)
-}
-
-// An iterator over a stream of data that adds the capability of close
-type CloseableIterator interface {
-	Iterator
 	io.Closer
 }
 
@@ -40,6 +35,7 @@ const (
 )
 
 var _ Iterator = &DefaultIterator{}
+var _ io.Closer = &DefaultIterator{}
 
 type DefaultIterator struct {
 	state State
@@ -50,6 +46,7 @@ type DefaultIterator struct {
 	closer Closer
 }
 
+
 // Given a way to compute next, returns an iterator
 func NewDefaultIterator(computeNext ComputeNext) Iterator {
 	return &DefaultIterator{
@@ -57,11 +54,8 @@ func NewDefaultIterator(computeNext ComputeNext) Iterator {
 	}
 }
 
-var _ CloseableIterator = &DefaultIterator{}
-var _ io.Closer = &DefaultIterator{}
-
 // Given a way to compute next and a close handler, return a closeable iterator
-func NewCloseableIterator(computeNext ComputeNext, closer Closer) CloseableIterator {
+func NewCloseableIterator(computeNext ComputeNext, closer Closer) Iterator {
 	return &DefaultIterator{
 		ComputeNext: computeNext,
 		closer:      closer,
