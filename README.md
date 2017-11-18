@@ -21,26 +21,5 @@ iter := NewDefaultIterator(func() (next interface{}, endOfData bool, e error) {
     // If there is no next element return: nil, true, nil 
 })
 
-```
-
-### Create an iterator that needs to close resources
-
-Especially when databases and networking are involved, a programmer has to make sure that all the resources are dismissed after a particular task is completed.
-For this reason an ```Iterator``` can be created specifying a ```Closer``` which will take care of closing the resources.
-The programmer needs to make sure that the ```Close()``` method is always called, for example deferring the call just after creating the iterator.
-
-```go
-iter := NewCloseableIterator(
-	func() (next interface{}, endOfData bool, e error) {
-    // Here put the logic that is computing the next element.
-    // If there is a next element return: next, false, nil
-    // If an error occurs computin the next element return: nil, true, error
-    // If there is no next element return: nil, true, nil
-    },
-    func() error {
-        // Close the resources.
-    },
-)
 
 defer iter.Close()
-```
