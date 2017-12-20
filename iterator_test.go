@@ -208,13 +208,31 @@ func TestFilterNonNil(t *testing.T) {
 	
 }
 
+func TestTransform_WhenErrorOccurs(t *testing.T) {
+	items := itemsArray(1, 10)
+	iterator := MyItemArray(items).Iterator()
+	transformedIterator := Transform(iterator, func(item interface{}) (interface{}, error) {
+		return nil, errors.Errorf("Failed transforming value: %+v", item)
+	})
+	
+	for i:=1; i<= len(items); i++ {
+		hasNext, err := iterator.HasNext()
+		assert.Nil(t, err)
+		assert.True(t, hasNext)
+		
+		next, err := transformedIterator.Next()
+		assert.Nil(t, next)
+		assert.NotNil(t, err)
+	}
+}
+
 func TestTransform(t *testing.T) {
 	
 	items := itemsArray(1, 10)
 	iterator := MyItemArray(items).Iterator()
-	transformedIterator := Transform(iterator, func(item interface{}) (transformedItem interface{}) {
+	transformedIterator := Transform(iterator, func(item interface{}) (interface{}, error) {
 		nextMyItem := item.(*MyItem)
-		return fmt.Sprintf("%s : %d", nextMyItem.Name, nextMyItem.Id)
+		return fmt.Sprintf("%s : %d", nextMyItem.Name, nextMyItem.Id), nil
 	})
 	
 	for i:=1; i<= len(items); i++ {

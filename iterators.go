@@ -42,7 +42,7 @@ func FilterNonNil(it Iterator) Iterator {
 	})
 }
 
-type TransformFunc func(item interface{}) interface{}
+type TransformFunc func(item interface{}) (interface{}, error)
 
 // Creates an wrapper-iterator over the original that will transform elements according to the filter function specified
 func Transform(iter Iterator, fn TransformFunc) Iterator {
@@ -60,10 +60,11 @@ func Transform(iter Iterator, fn TransformFunc) Iterator {
 				var ret interface{}
 				ret, err = iter.Next()
 				if err != nil {
-					return nil, true, err
+					return nil, false, err
 				}
 				
-				return fn(ret), false, nil
+				nextFn, err := fn(ret)
+				return nextFn, false, err
 			}
 		},
 		closer: func() (e error) {
