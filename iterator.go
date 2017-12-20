@@ -79,7 +79,7 @@ func (it *DefaultIterator) HasNext() (bool, error) {
 // Returns the next item in the iteration.
 // This method should be always called in combination with the HasNext.
 // If the iterator reached the end of data, the method will return an error
-func (it *DefaultIterator) Next() (next interface{}, e error) {
+func (it *DefaultIterator) Next() (interface{}, error) {
 	hasNext, err := it.HasNext()
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (it *DefaultIterator) Next() (next interface{}, e error) {
 }
 
 //
-func (it *DefaultIterator) tryToComputeNext() (hasNext bool, e error) {
+func (it *DefaultIterator) tryToComputeNext() (bool, error) {
 	it.state = Failed // temporary pessimism
 	
 	next, eod, err := it.ComputeNext()
