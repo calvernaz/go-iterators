@@ -9,7 +9,7 @@ type PredicateFunc func(item interface{}) bool
 // Creates a wrapper-iterator over the original that will filter elements according to the filter function specified
 func Filter(iter Iterator, test PredicateFunc) Iterator {
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			for {
 				hasNext, err := iter.HasNext()
 				if err != nil {
@@ -47,7 +47,7 @@ type TransformFunc func(item interface{}) (interface{}, error)
 // Creates an wrapper-iterator over the original that will transform elements according to the filter function specified
 func Transform(iter Iterator, fn TransformFunc) Iterator {
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			for {
 				hasNext, err := iter.HasNext()
 				if err != nil {
@@ -77,7 +77,7 @@ func Transform(iter Iterator, fn TransformFunc) Iterator {
 func Skip(it Iterator, skipNumber int) Iterator {
 	skippedCountDown := skipNumber
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			for skippedCountDown > 0 {
 				hasNext, err := it.HasNext()
 				if err != nil {
@@ -115,7 +115,7 @@ func Skip(it Iterator, skipNumber int) Iterator {
 func Limit(it Iterator, upperBound int) Iterator {
 	servedItems := 0
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			if servedItems == upperBound {
 				return nil, true, nil
 			}
@@ -146,7 +146,7 @@ func Concat(iterators ...Iterator) Iterator {
 	var currentIteratorIdx = 0
 	var currentIterator = iterators[0]
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			for {
 				hasNext, err := currentIterator.HasNext()
 				if err != nil {
@@ -191,7 +191,7 @@ type CompareFunc func(item1 interface{}, item2 interface{}) int
 // Merges multiple sorted iterators into a single sorted iterator.
 func Merge(compareFn CompareFunc, iterators ...Iterator) Iterator {
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			for {
 				ret, err := selectMin(compareFn, iterators...)
 				if err != nil {
@@ -225,7 +225,7 @@ type EqualsFunc func(item1 interface{}, item2 interface{}) bool
 func Dedup(it Iterator, equalsFn EqualsFunc) Iterator {
 	var prev interface{}
 	return &DefaultIterator{
-		ComputeNext: func() (next interface{}, endOfData bool, e error) {
+		ComputeNext: func() (interface{}, bool, error) {
 			for {
 				hasNext, err := it.HasNext()
 				if err != nil {
@@ -264,11 +264,9 @@ func selectMin(compareFn CompareFunc, iterators ...Iterator) (interface{}, error
 		if hasNext {
 			peek, err = it.Peek()
 			if currentSelection == nil {
-				//log.Printf("Set current selection to %v", peek)
 				currentSelection = peek
 				selected = i
 			} else if compareFn(currentSelection, peek) > 0 { // The peek is lower than the current selection
-				//log.Printf("Switch current selection from %v to %v", currentSelection, peek)
 				currentSelection = peek
 				selected = i
 			}
@@ -281,4 +279,3 @@ func selectMin(compareFn CompareFunc, iterators ...Iterator) (interface{}, error
 		return nil, nil
 	}
 }
-
