@@ -1,4 +1,4 @@
-package main
+package example
 
 import (
 	"github.com/calvernaz/go-iterators"
@@ -8,7 +8,7 @@ import (
 
 // This example shows how to use an iterator to implement the unix tee pipe.
 
-func main() {
+func ExampleTee() {
 	
 	// transform function
 	var tr iterator.TransformFunc = func(item interface{}) (interface{}, error) {
@@ -34,8 +34,19 @@ func main() {
 			return
 		}
 		
-		fmt.Println(trItem)
+		fmt.Printf("%+v\n", trItem)
 	}
+	// Output:
+	// &{Id:1 Name:item_0001Tr}
+	// &{Id:2 Name:item_0002Tr}
+	// &{Id:3 Name:item_0003Tr}
+	// &{Id:4 Name:item_0004Tr}
+	// &{Id:5 Name:item_0005Tr}
+	// &{Id:6 Name:item_0006Tr}
+	// &{Id:7 Name:item_0007Tr}
+	// &{Id:8 Name:item_0008Tr}
+	// &{Id:9 Name:item_0009Tr}
+	// &{Id:10 Name:item_0010Tr}
 }
 
 

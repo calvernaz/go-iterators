@@ -1,4 +1,4 @@
-package main
+package example
 
 import (
 	"github.com/calvernaz/go-iterators"
@@ -21,7 +21,7 @@ const csvRows = `first_name,last_name,username
 Ken,Thompson,ken
 "Robert","Griesemer","gri"
 `
-func main() {
+func ExampleCsv() {
 	iter, err := NewCsvIterator()
 	if err != nil {
 		log.Printf("error opening file")
@@ -49,6 +49,11 @@ func main() {
 		
 		fmt.Printf("%s\n", record)
 	}
+	
+	// Output:
+	// Rob : Pike
+	// Ken : Thompson
+	// Robert : Griesemer
 }
 
 
