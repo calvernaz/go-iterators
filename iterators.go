@@ -10,12 +10,7 @@ type PredicateFunc func(item interface{}) bool
 func Filter(iter Iterator, test PredicateFunc) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
-			for {
-				hasNext := iter.HasNext()
-				if !hasNext {
-					return nil, true, nil
-				}
-				
+			for iter.HasNext() {
 				ret, err := iter.Next()
 				if err != nil {
 					return nil, true, err
@@ -24,6 +19,7 @@ func Filter(iter Iterator, test PredicateFunc) Iterator {
 					return ret, false, nil
 				}
 			}
+			return nil, true, nil
 		},
 		closer: func() error {
 			return iter.Close()
@@ -44,12 +40,7 @@ type TransformFunc func(item interface{}) (interface{}, error)
 func Transform(iter Iterator, fn TransformFunc) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
-			for {
-				hasNext := iter.HasNext()
-				if !hasNext {
-					return nil, true, nil
-				}
-				
+			for iter.HasNext() {
 				ret, err := iter.Next()
 				if err != nil {
 					return nil, false, err
@@ -58,6 +49,7 @@ func Transform(iter Iterator, fn TransformFunc) Iterator {
 				nextFn, err := fn(ret)
 				return nextFn, false, err
 			}
+			return nil, true, nil
 		},
 		closer: func() (e error) {
 			return iter.Close()
@@ -204,21 +196,18 @@ func Dedup(it Iterator, equalsFn EqualsFunc) Iterator {
 	var prev interface{}
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
-			for {
-				hasNext := it.HasNext()
-				if !hasNext {
-					return nil, true, nil
-				}
-				
+			for it.HasNext() {
 				ret, err := it.Next()
 				if err != nil {
 					return nil, true, err
 				}
+				
 				if prev == nil || !equalsFn(prev, ret) {
 					prev = ret
 					return ret, false, nil
 				}
 			}
+			return nil, true, nil
 		},
 		closer: func() (e error) {
 			return it.Close()
@@ -231,7 +220,6 @@ func selectMin(compareFn CompareFunc, iterators ...Iterator) (interface{}, error
 	var current interface{}
 	for i, it := range iterators {
 		hasNext := it.HasNext()
-	
 		if hasNext {
 			peek, err := it.Peek()
 			if err != nil {

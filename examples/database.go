@@ -30,7 +30,7 @@ func LoadUserAddresses(db *sql.DB, userID int64) error {
 	}
 	
 	// iterator next function
-	next := func() (next interface{}, endOfData bool, err error) {
+	nextFn := func() (next interface{}, endOfData bool, err error) {
 		if rows.Next() {
 			var addr address
 			if err := rows.Scan(&addr.number, &addr.street); err != nil {
@@ -49,7 +49,7 @@ func LoadUserAddresses(db *sql.DB, userID int64) error {
 		return nil
 	}
 	
-	iter := iterator.NewCloseableIterator(next, closeFn)
+	iter := iterator.NewCloseableIterator(nextFn, closeFn)
 	defer iter.Close()
 	
 	for  iter.HasNext() {
