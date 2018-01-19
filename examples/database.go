@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	
 	
-	"github.com/calvernaz/go-iterators/pkg"
+	"github.com/calvernaz/go-iterators"
 	_ "github.com/proullon/ramsql/driver"
 	"fmt"
+	"github.com/pkg/errors"
 )
 
 type address struct {
@@ -47,11 +48,7 @@ func LoadUserAddresses(db *sql.DB, userID int64) error {
 	
 	iter := iterator.NewCloseableIterator(next, closeFn)
 	for {
-		hasNext, err := iter.HasNext()
-		if err != nil {
-			break
-		}
-		
+		hasNext  := iter.HasNext()
 		if !hasNext {
 			break
 		}
@@ -104,10 +101,13 @@ func LoadUserAddresses(db *sql.DB, userID int64) error {
 
 func main() {
 
-	var tr iterator.TransformFunc = func(item interface{}) interface{} {
-		i := item.(*MyItem)
+	var tr iterator.TransformFunc = func(item interface{}) (interface{}, error) {
+		i, ok := item.(*MyItem)
+		if !ok {
+			return nil, errors.New("failed casting item to type *MyItem")
+		}
 		i.Name = i.Name + "Tr"
-		return i
+		return i, nil
 	}
 	
 	items := itemsArray(1, 10)
@@ -116,11 +116,7 @@ func main() {
 	iter := TeeIterator(iterator, tr)
 	
 	for {
-		hasNext, err := iter.HasNext()
-		if err != nil {
-			return
-		}
-		
+		hasNext := iter.HasNext()
 		if !hasNext {
 			return
 		}
