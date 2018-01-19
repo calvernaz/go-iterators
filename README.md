@@ -1,4 +1,4 @@
-# GO ITERATORS
+# GO Iterators
 
 The go-iterators project is a library offering the iterator pattern for Golang.
 

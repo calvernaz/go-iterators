@@ -1,0 +1,14 @@
+language: go
+
+go:
+- tip
+
+before_install:
+- go get -u github.com/golang/dep/...
+- dep ensure
+- go get golang.org/x/tools/cmd/cover
+- go get github.com/mattn/goveralls
+
+script:
+- go test -v -covermode=count -coverprofile=coverage.out
+- $HOME/gopath/bin/goveralls -coverprofile=coverage.out -service=travis-ci
