@@ -9,6 +9,8 @@ Why iterators are useful?
 
 ## Usage examples
 
+[Examples](examples/database.go)
+
 ### Create an iterator
 
 Creating an iterator is as simple as defining a function, the function will have to compute the next item in the iteration.
@@ -16,9 +18,9 @@ Creating an iterator is as simple as defining a function, the function will have
 ```go
 iter := NewDefaultIterator(func() (next interface{}, eod bool, err error) { 
     // Here put the logic that is computing the next element.
-    // If there is a next element return: next, false, nil
-    // If an error occurs computin the next element return: nil, true, error
-    // If there is no next element return: nil, true, nil 
+    // 1. If there is a next element return: next, false, nil
+    // 2. If an error occurs computing the next element return: nil, false, error
+    // 3. If there is no next element return: nil, true, nil 
 })
 
 
