@@ -11,16 +11,12 @@ func Filter(iter Iterator, test PredicateFunc) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
 			for {
-				hasNext, err := iter.HasNext()
-				if err != nil {
-					return nil, false, err
-					
-				}
+				hasNext := iter.HasNext()
 				if !hasNext {
 					return nil, true, nil
 				}
-				var ret interface{}
-				ret, err = iter.Next()
+				
+				ret, err := iter.Next()
 				if err != nil {
 					return nil, true, err
 				}
@@ -49,16 +45,12 @@ func Transform(iter Iterator, fn TransformFunc) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
 			for {
-				hasNext, err := iter.HasNext()
-				if err != nil {
-					return nil, false, err
-					
-				}
+				hasNext := iter.HasNext()
 				if !hasNext {
 					return nil, true, nil
 				}
-				var ret interface{}
-				ret, err = iter.Next()
+				
+				ret, err := iter.Next()
 				if err != nil {
 					return nil, false, err
 				}
@@ -74,32 +66,24 @@ func Transform(iter Iterator, fn TransformFunc) Iterator {
 }
 
 // Creates an wrapper-iterator over the original that will skip the first 'numberOfElementsToSkip' items
-func Skip(it Iterator, skipNumber int) Iterator {
-	skippedCountDown := skipNumber
+func Skip(it Iterator, howMany int) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
-			for skippedCountDown > 0 {
-				hasNext, err := it.HasNext()
-				if err != nil {
-					return nil, false, err
-				}
+			for howMany > 0 {
+				hasNext:= it.HasNext()
 				if !hasNext {
 					return nil, true, nil
 				}
 				_, _ = it.Next()
-				skippedCountDown = skippedCountDown - 1
+				howMany -= 1
 			}
 			
-			hasNext, err := it.HasNext()
-			if err != nil {
-				return nil, false, err
-			}
-			
+			hasNext := it.HasNext()
 			if !hasNext {
 				return nil, true, nil
 			}
-			var ret interface{}
-			ret, err = it.Next()
+			
+			ret, err := it.Next()
 			if err != nil {
 				return nil, true, err
 			}
@@ -113,26 +97,23 @@ func Skip(it Iterator, skipNumber int) Iterator {
 
 // Creates an wrapper-iterator over the original that will iterate until there are no more items or the 'upperBound' is reached.
 func Limit(it Iterator, upperBound int) Iterator {
-	servedItems := 0
+	items := 0
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
-			if servedItems == upperBound {
+			if items == upperBound {
 				return nil, true, nil
 			}
 			
-			hasNext, err := it.HasNext()
-			if err != nil {
-				return nil, false, err
-			}
+			hasNext := it.HasNext()
 			if !hasNext {
 				return nil, true, nil
 			}
-			var ret interface{}
-			ret, err = it.Next()
+			
+			ret, err := it.Next()
 			if err != nil {
 				return nil, true, err
 			}
-			servedItems = servedItems + 1
+			items = items + 1
 			return ret, false, nil
 		},
 		closer: func() (e error) {
@@ -144,25 +125,22 @@ func Limit(it Iterator, upperBound int) Iterator {
 // Appends multiple iterators together exposing them as a single virtual iterator.
 func Concat(iterators ...Iterator) Iterator {
 	var currentIteratorIdx = 0
-	var currentIterator = iterators[0]
+	var iterator = iterators[0]
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
 			for {
-				hasNext, err := currentIterator.HasNext()
-				if err != nil {
-					return nil, false, err
-				}
+				hasNext := iterator.HasNext()
 				if !hasNext {
-					currentIterator.Close()
+					iterator.Close()
 					currentIteratorIdx ++
 					if currentIteratorIdx < len(iterators) {
-						currentIterator = iterators[currentIteratorIdx]
+						iterator = iterators[currentIteratorIdx]
 						continue
 					}
 					return nil, true, nil
 				}
-				var next interface{}
-				next, err = currentIterator.Next()
+				
+				next, err := iterator.Next()
 				if err != nil {
 					return nil, true, err
 				}
@@ -227,13 +205,11 @@ func Dedup(it Iterator, equalsFn EqualsFunc) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
 			for {
-				hasNext, err := it.HasNext()
-				if err != nil {
-					return nil, false, err
-				}
+				hasNext := it.HasNext()
 				if !hasNext {
 					return nil, true, nil
 				}
+				
 				ret, err := it.Next()
 				if err != nil {
 					return nil, true, err
@@ -251,30 +227,29 @@ func Dedup(it Iterator, equalsFn EqualsFunc) Iterator {
 }
 
 func selectMin(compareFn CompareFunc, iterators ...Iterator) (interface{}, error) {
-	var err error
-	var hasNext bool
 	var selected int
-	var peek interface{}
-	var currentSelection interface{}
+	var current interface{}
 	for i, it := range iterators {
-		hasNext, err = it.HasNext()
-		if err != nil {
-			return nil, err
-		}
+		hasNext := it.HasNext()
+	
 		if hasNext {
-			peek, err = it.Peek()
-			if currentSelection == nil {
-				currentSelection = peek
+			peek, err := it.Peek()
+			if err != nil {
+				return nil, err
+			}
+			
+			if current == nil {
+				current = peek
 				selected = i
-			} else if compareFn(currentSelection, peek) > 0 { // The peek is lower than the current selection
-				currentSelection = peek
+			} else if compareFn(current, peek) > 0 { // The peek is lower than the current selection
+				current = peek
 				selected = i
 			}
 		}
 	}
-	if currentSelection != nil {
+	if current != nil {
 		_, _ = iterators[selected].Next()
-		return currentSelection, nil
+		return current, nil
 	} else {
 		return nil, nil
 	}

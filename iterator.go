@@ -15,7 +15,7 @@ type Closer func() error
 
 // An iterator over a stream of data
 type Iterator interface {
-	HasNext() (bool, error)
+	HasNext() bool
 	Next() (interface{}, error)
 	Peek() (item interface{}, e error)
 	io.Closer
@@ -40,6 +40,7 @@ var _ io.Closer = &DefaultIterator{}
 type DefaultIterator struct {
 	state State
 	next  interface{}
+	err error
 	
 	ComputeNext ComputeNext
 	
@@ -64,14 +65,15 @@ func NewCloseableIterator(computeNext ComputeNext, closer Closer) Iterator {
 
 // Returns true if the iterator can be continued or false if the end of data has been reached.
 // It returns an error if the check fails.
-func (it *DefaultIterator) HasNext() (bool, error) {
+func (it *DefaultIterator) HasNext() bool {
 	switch it.state {
 	case Ready:
-		return true, nil
+		return true
 	case Done:
-		return false, nil
+		return false
 	case Failed:
-		return false, errors.New("metadata iterator in an error state")
+		return false
+		//, errors.New("metadata iterator in an error state")
 	}
 	return it.tryToComputeNext()
 }
@@ -80,13 +82,14 @@ func (it *DefaultIterator) HasNext() (bool, error) {
 // This method should be always called in combination with the HasNext.
 // If the iterator reached the end of data, the method will return an error
 func (it *DefaultIterator) Next() (interface{}, error) {
-	hasNext, err := it.HasNext()
-	if err != nil {
-		return nil, err
+	hasNext := it.HasNext()
+	if it.err != nil {
+		return nil, it.err
 	}
 	if !hasNext {
-		return nil, errors.New("no such element")
+		return nil, errors.New("no such element") // is eof an error?
 	}
+	
 	it.state = NotReady
 	nextItem := it.next
 	it.next = nil
@@ -94,33 +97,37 @@ func (it *DefaultIterator) Next() (interface{}, error) {
 }
 
 //
-func (it *DefaultIterator) tryToComputeNext() (bool, error) {
+func (it *DefaultIterator) tryToComputeNext() bool {
 	it.state = Failed // temporary pessimism
 	
 	next, eod, err := it.ComputeNext()
-	if err != nil {
+	if err != nil {  // we got an err, stated
 		it.state = Failed
-		return false, err
+		it.err = err
+		return false
 	}
 	
 	if eod {
 		it.state = Done
-		return false, nil
+		return false
 	}
 	
 	it.state = Ready
 	it.next = next
-	return true, nil
+	return true
 }
 
 // Returns the next element without continuing the iteration.
 func (it *DefaultIterator) Peek() (interface{}, error) {
-	hasNext, err := it.HasNext()
-	if err != nil {
-		return nil, err
+	hasNext := it.HasNext()
+	// an error getting the next item
+	if it.err != nil {
+		return nil, it.err
 	}
+	
+	// no more items
 	if !hasNext {
-		return nil, errors.New("no such element")
+		return nil, io.EOF
 	}
 	next := it.next
 	return next, nil

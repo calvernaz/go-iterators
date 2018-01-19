@@ -16,10 +16,12 @@ func TestSimpleIterator(t *testing.T) {
 	iterator := NewDefaultIterator(computeNext)
 	total := 0
 	for range items {
-		_, err := iterator.HasNext()
-		assert.Nil(t, err)
+		assert.True(t, iterator.HasNext())
+		
 		next, err := iterator.Next()
+		assert.Nil(t, err)
 		assert.NotNil(t, next)
+		
 		// sum up the ids
 		i := next.(*Item)
 		total += i.Id
@@ -36,10 +38,11 @@ func TestCloseHandler(t *testing.T) {
 	})
 	
 	for range items {
-		_, err := iterator.HasNext()
-		assert.Nil(t, err)
+		iterator.HasNext()
 		next, err := iterator.Next()
 		assert.NotNil(t, next)
+		assert.Nil(t, err)
+		
 	}
 	
 	// idx was incremented
@@ -58,8 +61,7 @@ func TestTransform_WhenErrorOccurs(t *testing.T) {
 	})
 	
 	for range items {
-		hasNext, err := iterator.HasNext()
-		assert.Nil(t, err)
+		hasNext := iterator.HasNext()
 		assert.True(t, hasNext)
 		
 		next, err := transformedIterator.Next()
@@ -77,8 +79,7 @@ func TestTransform(t *testing.T) {
 	})
 	
 	for i := 1; i < len(items); i++ {
-		hasNext, err := iterator.HasNext()
-		assert.Nil(t, err)
+		hasNext := iterator.HasNext()
 		assert.True(t, hasNext)
 		
 		next, err := iterator.Next()
@@ -91,7 +92,7 @@ func TestTransform(t *testing.T) {
 		expected := fmt.Sprintf("%s : %d", items[i-1].Name, items[i-1].Id)
 		assert.Equal(t, expected, fnItem)
 	}
-	
+	iterator.Close()
 }
 
 func TestSkip(t *testing.T) {
@@ -100,8 +101,7 @@ func TestSkip(t *testing.T) {
 	iterator = Skip(iterator, 4)
 	
 	for i := 4; i < len(items); i++ {
-		hasNext, err := iterator.HasNext()
-		assert.Nil(t, err)
+		hasNext := iterator.HasNext()
 		assert.True(t, hasNext)
 		
 		next, err := iterator.Next()
@@ -111,6 +111,8 @@ func TestSkip(t *testing.T) {
 		item := next.(*Item)
 		assert.Equal(t, i, item.Id, fmt.Sprintf("Expected '%d' but got '%d'", i, item.Id))
 	}
+	
+	iterator.Close()
 }
 
 func TestFilter(t *testing.T) {
@@ -126,8 +128,7 @@ func TestFilter(t *testing.T) {
 	})
 	
 	for range items[:len(items)/2]{
-		hasNext, err := iterator.HasNext()
-		assert.Nil(t, err)
+		hasNext := iterator.HasNext()
 		assert.True(t, hasNext)
 		
 		next, err := iterator.Next()
@@ -137,6 +138,7 @@ func TestFilter(t *testing.T) {
 		item := next.(*Item)
 		assert.True(t, item.Id % 2 == 0)
 	}
+	iterator.Close()
 }
 
 func TestFilterNonNil(t *testing.T) {
@@ -155,7 +157,7 @@ func TestFilterNonNil(t *testing.T) {
 	iterator = FilterNonNil(iterator)
 	
 	for {
-		hasNext, err := iterator.HasNext()
+		hasNext := iterator.HasNext()
 		if !hasNext {
 			return
 		}
@@ -173,15 +175,16 @@ func TestLimit(t *testing.T) {
 	iterator = Limit(iterator, 6)
 	
 	i := 0
-	for {
-		hasNext, _ := iterator.HasNext()
+	for iterator.HasNext() {
+		hasNext := iterator.HasNext()
 		if !hasNext {
-			return
+			break
 		}
 		iterator.Next()
 		i++
 	}
-	assert.Equal(t, 5, i)
+	iterator.Close()
+	assert.Equal(t, 6, i)
 }
 
 func TestConcat(t *testing.T) {
@@ -194,14 +197,15 @@ func TestConcat(t *testing.T) {
 	iterator := Concat(iterator0To10, iterator10To15)
 	
 	i := 0
-	for {
-		hasNext, _ := iterator.HasNext()
+	for iterator.HasNext() {
+		hasNext := iterator.HasNext()
 		if !hasNext {
-			return
+			break
 		}
 		iterator.Next()
 		i++
 	}
+	iterator.Close()
 	assert.Equal(t, 15, i)
 }
 
@@ -217,10 +221,10 @@ func TestDedup(t *testing.T) {
 	
 	expected := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	i := 0
-	for {
-		hasNext, _ := iterator.HasNext()
+	for iterator.HasNext() {
+		hasNext := iterator.HasNext()
 		if !hasNext {
-			return
+			break
 		}
 		item, _ := iterator.Next()
 		
@@ -228,6 +232,7 @@ func TestDedup(t *testing.T) {
 		assert.Equal(t, expected[i], mitem.Id)
 		i++
 	}
+	iterator.Close()
 	assert.Equal(t, i, len(expected))
 }
 
@@ -255,10 +260,10 @@ func TestMerge(t *testing.T) {
 	
 	expected := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
 	i := 0
-	for {
-		hasNext, _ := iterator.HasNext()
+	for iterator.HasNext() {
+		hasNext := iterator.HasNext()
 		if !hasNext {
-			return
+			break
 		}
 		item, _ := iterator.Next()
 		
@@ -266,5 +271,7 @@ func TestMerge(t *testing.T) {
 		assert.Equal(t, expected[i], mitem.Id)
 		i++
 	}
+	
+	iterator.Close()
 	assert.Equal(t, i, len(expected))
 }
