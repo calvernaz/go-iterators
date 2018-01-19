@@ -9,7 +9,7 @@ Why iterators are useful?
 
 ## Usage examples
 
-[Examples](examples/database.go)
+[Examples](examples/)
 
 ### Create an iterator
 
