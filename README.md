@@ -30,6 +30,23 @@ iter := NewDefaultIterator(func() (next interface{}, eod bool, err error) {
 defer iter.Close()
 ```
 
+### Create an iterator from a slice
+
+```go
+func FisIterator(fis []os.FileInfo) iterator.Iterator {
+	i := 0
+	return iterator.NewDefaultIterator(func() (interface{}, bool, error) {
+		if i >= len(fis) {
+			return nil, true, nil
+		}
+		
+		file := &fis[i]
+		i++
+		return file, false, nil
+	})
+}
+
+```
 
 ## Credits
 
