@@ -136,7 +136,10 @@ func (it *DefaultIterator) Peek() (interface{}, error) {
 func (it *DefaultIterator) Close() error {
 	it.state = Done
 	if it.closer != nil {
-		it.closer()
+		err := it.closer()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

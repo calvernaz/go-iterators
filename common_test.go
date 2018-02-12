@@ -3,7 +3,7 @@ package iterator
 import "fmt"
 
 type Item struct {
-	Id   int
+	ID   int
 	Name string
 }
 
@@ -50,7 +50,7 @@ func generateItems(from int, to int) []Item {
 	var items []Item
 	for from < to {
 		items = append(items, Item{
-			Id:   from,
+			ID:   from,
 			Name: fmt.Sprintf("item_%04d", from),
 		})
 		from++
@@ -63,10 +63,9 @@ func itemsFromIds(ids ...int) []Item {
 	var items []Item
 	for _, id := range ids {
 		items = append(items, Item{
-			Id: id,
+			ID:   id,
 			Name: fmt.Sprintf("item_%04d", id),
 		})
 	}
 	return items
 }
-

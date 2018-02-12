@@ -71,7 +71,7 @@ func Skip(it Iterator, howMany int) Iterator {
 					return nil, true, nil
 				}
 				_, _ = it.Next()
-				howMany -= 1
+				howMany--
 			}
 			
 			hasNext := it.HasNext()
@@ -127,7 +127,7 @@ func Concat(iterators ...Iterator) Iterator {
 			for {
 				hasNext := iterator.HasNext()
 				if !hasNext {
-					iterator.Close()
+					_ = iterator.Close()
 					currentIteratorIdx ++
 					if currentIteratorIdx < len(iterators) {
 						iterator = iterators[currentIteratorIdx]
@@ -160,9 +160,10 @@ func Concat(iterators ...Iterator) Iterator {
 	}
 }
 
+
 type CompareFunc func(item1 interface{}, item2 interface{}) int
 
-// Merges multiple sorted iterators into a single sorted iterator.
+// Merge combines multiple sorted iterators into a single sorted iterator.
 func Merge(compareFn CompareFunc, iterators ...Iterator) Iterator {
 	return &DefaultIterator{
 		ComputeNext: func() (interface{}, bool, error) {
@@ -194,8 +195,10 @@ func Merge(compareFn CompareFunc, iterators ...Iterator) Iterator {
 	}
 }
 
+// EqualsFunc returns true is items are equal
 type EqualsFunc func(item1 interface{}, item2 interface{}) bool
 
+// Dedup eliminates duplicates
 func Dedup(it Iterator, equalsFn EqualsFunc) Iterator {
 	var prev interface{}
 	return &DefaultIterator{
@@ -242,7 +245,7 @@ func selectMin(compareFn CompareFunc, iterators ...Iterator) (interface{}, error
 	if current != nil {
 		_, _ = iterators[selected].Next()
 		return current, nil
-	} else {
-		return nil, nil
 	}
+	return nil, nil
+	
 }

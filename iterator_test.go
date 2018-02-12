@@ -24,7 +24,7 @@ func TestSimpleIterator(t *testing.T) {
 		
 		// sum up the ids
 		i := next.(*Item)
-		total += i.Id
+		total += i.ID
 	}
 	assert.Equal(t, 45, total)
 }
@@ -75,7 +75,7 @@ func TestTransform(t *testing.T) {
 	iterator := Items(items).Iterator()
 	iterator = Transform(iterator, func(item interface{}) (interface{}, error) {
 		it := item.(*Item)
-		return fmt.Sprintf("%s : %d", it.Name, it.Id), nil
+		return fmt.Sprintf("%s : %d", it.Name, it.ID), nil
 	})
 	
 	for i := 1; i < len(items); i++ {
@@ -89,7 +89,7 @@ func TestTransform(t *testing.T) {
 		// assume transformation
 		fnItem := next.(string)
 		
-		expected := fmt.Sprintf("%s : %d", items[i-1].Name, items[i-1].Id)
+		expected := fmt.Sprintf("%s : %d", items[i-1].Name, items[i-1].ID)
 		assert.Equal(t, expected, fnItem)
 	}
 	iterator.Close()
@@ -109,7 +109,7 @@ func TestSkip(t *testing.T) {
 		assert.NotNil(t, next)
 		
 		item := next.(*Item)
-		assert.Equal(t, i, item.Id, fmt.Sprintf("Expected '%d' but got '%d'", i, item.Id))
+		assert.Equal(t, i, item.ID, fmt.Sprintf("Expected '%d' but got '%d'", i, item.ID))
 	}
 	
 	iterator.Close()
@@ -121,7 +121,7 @@ func TestFilter(t *testing.T) {
 	
 	iterator = Filter(iterator, func(item interface{}) (bool, error) {
 		myItem := item.(*Item)
-		if (myItem.Id % 2) == 0 {
+		if (myItem.ID % 2) == 0 {
 			return true, nil
 		}
 		return false, nil
@@ -136,7 +136,7 @@ func TestFilter(t *testing.T) {
 		assert.NotNil(t, next)
 		
 		item := next.(*Item)
-		assert.True(t, item.Id % 2 == 0)
+		assert.True(t, item.ID% 2 == 0)
 	}
 	iterator.Close()
 }
@@ -216,7 +216,7 @@ func TestDedup(t *testing.T) {
 	iterator = Dedup(iterator, func(item1 interface{}, item2 interface{}) bool {
 		var myItem1 = item1.(*Item)
 		var myItem2 = item2.(*Item)
-		return myItem1.Id == myItem2.Id
+		return myItem1.ID == myItem2.ID
 	})
 	
 	expected := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
@@ -229,7 +229,7 @@ func TestDedup(t *testing.T) {
 		item, _ := iterator.Next()
 		
 		mitem := item.(*Item)
-		assert.Equal(t, expected[i], mitem.Id)
+		assert.Equal(t, expected[i], mitem.ID)
 		i++
 	}
 	iterator.Close()
@@ -249,9 +249,9 @@ func TestMerge(t *testing.T) {
 	iterator := Merge(func(item1 interface{}, item2 interface{}) int {
 		var myItem1 = item1.(*Item)
 		var myItem2 = item2.(*Item)
-		if myItem1.Id == myItem2.Id {
+		if myItem1.ID == myItem2.ID {
 			return 0
-		} else if myItem1.Id > myItem2.Id {
+		} else if myItem1.ID > myItem2.ID {
 			return 1
 		} else {
 			return -1
@@ -268,7 +268,7 @@ func TestMerge(t *testing.T) {
 		item, _ := iterator.Next()
 		
 		mitem := item.(*Item)
-		assert.Equal(t, expected[i], mitem.Id)
+		assert.Equal(t, expected[i], mitem.ID)
 		i++
 	}
 	
