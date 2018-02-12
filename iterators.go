@@ -4,7 +4,7 @@ import "github.com/pkg/errors"
 
 // Helper Functions
 
-type PredicateFunc func(item interface{}) bool
+type PredicateFunc func(item interface{}) (bool, error)
 
 // Creates a wrapper-iterator over the original that will filter elements according to the filter function specified
 func Filter(iter Iterator, test PredicateFunc) Iterator {
@@ -15,8 +15,12 @@ func Filter(iter Iterator, test PredicateFunc) Iterator {
 				if err != nil {
 					return nil, true, err
 				}
-				if test(ret) {
+				ok, err := test(ret) // valid predicate
+				if ok {
 					return ret, false, nil
+				}
+				if err != nil { // predicate error
+					return nil, false, err
 				}
 			}
 			return nil, true, nil
@@ -29,8 +33,8 @@ func Filter(iter Iterator, test PredicateFunc) Iterator {
 
 // Specific case of Filter that returns a wrapper-iterator over the original that will return only the non nil items
 func FilterNonNil(it Iterator) Iterator {
-	return Filter(it, func(item interface{}) bool {
-		return item != nil
+	return Filter(it, func(item interface{}) (bool, error) {
+		return item != nil, nil
 	})
 }
 

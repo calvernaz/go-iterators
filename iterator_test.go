@@ -119,12 +119,12 @@ func TestFilter(t *testing.T) {
 	items := generateItems(0, 10)
 	iterator := Items(items).Iterator()
 	
-	iterator = Filter(iterator, func(item interface{}) bool {
+	iterator = Filter(iterator, func(item interface{}) (bool, error) {
 		myItem := item.(*Item)
 		if (myItem.Id % 2) == 0 {
-			return true
+			return true, nil
 		}
-		return false
+		return false, nil
 	})
 	
 	for range items[:len(items)/2]{
