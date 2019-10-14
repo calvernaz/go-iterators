@@ -6,7 +6,7 @@ package iterator
 
 import (
 	"io"
-	
+
 	"github.com/pkg/errors"
 )
 
@@ -34,19 +34,18 @@ const (
 	Failed
 )
 
-var _ Iterator = &DefaultIterator{}
-var _ io.Closer = &DefaultIterator{}
+var _ Iterator = (*DefaultIterator)(nil)
+var _ io.Closer = (*DefaultIterator)(nil)
 
 type DefaultIterator struct {
 	state State
 	next  interface{}
-	err error
-	
+	err   error
+
 	ComputeNext ComputeNext
-	
+
 	closer Closer
 }
-
 
 // Given a way to compute next, returns an iterator
 func NewDefaultIterator(computeNext ComputeNext) Iterator {
@@ -89,7 +88,7 @@ func (it *DefaultIterator) Next() (interface{}, error) {
 	if !hasNext {
 		return nil, errors.New("no such element") // is eof an error?
 	}
-	
+
 	it.state = NotReady
 	nextItem := it.next
 	it.next = nil
@@ -99,19 +98,19 @@ func (it *DefaultIterator) Next() (interface{}, error) {
 //
 func (it *DefaultIterator) tryToComputeNext() bool {
 	it.state = Failed // temporary pessimism
-	
+
 	next, eod, err := it.ComputeNext()
-	if err != nil {  // we got an err, stated
+	if err != nil { // we got an err, stated
 		it.state = Failed
 		it.err = err
 		return false
 	}
-	
+
 	if eod {
 		it.state = Done
 		return false
 	}
-	
+
 	it.state = Ready
 	it.next = next
 	return true
@@ -124,7 +123,7 @@ func (it *DefaultIterator) Peek() (interface{}, error) {
 	if it.err != nil {
 		return nil, it.err
 	}
-	
+
 	// no more items
 	if !hasNext {
 		return nil, io.EOF
@@ -143,4 +142,3 @@ func (it *DefaultIterator) Close() error {
 	}
 	return nil
 }
-
