@@ -10,7 +10,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ComputeNext func() (interface{}, bool, error)
+// If there is a next element return: next, false, nil
+// If an error occurs computing the next element return: nil, false, error
+// If there is no next element return: nil, true, nil
+type ComputeNext func() (next interface{}, eod bool, err error)
 type Closer func() error
 
 // An iterator over a stream of data
